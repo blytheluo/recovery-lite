@@ -1,2 +1,42 @@
-# recovery-lite
-A lightweight mobile-first PWA for recovery tracking, reminders, symptom notes, and gentle rest.
+# 恢复中
+
+一个移动端优先的轻量 PWA，用来记录恢复期状态、提醒事项、身体变化和医生交代内容。
+
+## 功能
+
+- 今天状态输入
+- 自动整理今天只做三件事
+- 今日提醒清单
+- 身体记录
+- 医生交代与复诊记录
+- 住院模式
+- 放松卡片和恢复期日记
+- 本地存储
+- PWA 基础配置
+
+## 本地启动
+
+```bash
+pnpm install
+pnpm dev
+```
+
+## 构建
+
+```bash
+pnpm build
+pnpm preview
+```
+
+## 说明
+
+- 数据默认保存在浏览器本地 `localStorage`
+- 不含后端、账号系统或云同步
+- `public/sw.js` 提供基础离线缓存
+- `manifest.webmanifest` 支持添加到主屏幕
+
+## 后续扩展方向
+
+1. 把本地存储升级到 IndexedDB
+2. 增加更细的提醒通知能力
+3. 为云同步预留导入导出功能
