@@ -14,3 +14,5 @@ export const migrateLegacyRecords = () => {
     localStorage.setItem(BOOK_KEY, JSON.stringify(book));
   } catch { /* ignore malformed local data */ }
 };
+
+migrateLegacyRecords();
