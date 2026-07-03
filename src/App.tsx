@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { AppData, BodyRecord, DiaryEntry, ReminderItem, SurgeryPhase } from './types';
+import type { AppData, BodyRecord, ChecklistItem, DiaryEntry, ReminderItem, SurgeryPhase } from './types';
 import './styles.css';
 
 const KEY = 'recovery-lite-data-v2';
@@ -9,6 +9,31 @@ const today = () => {
 };
 const id = () => `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
+const checklistItem = (phase: SurgeryPhase, title: string, note = '', optional = false): ChecklistItem => ({ id: id(), phase, title, note, optional, done: false });
+
+const defaultChecklist = (): ChecklistItem[] => [
+  checklistItem('preOp', '确认入院时间、检查安排和禁食禁水要求', '以医院通知为准'),
+  checklistItem('preOp', '准备身份证、医保卡、检查报告和影像资料'),
+  checklistItem('preOp', '准备充电器和一根较长的充电线'),
+  checklistItem('preOp', '把想问医生的问题写下来'),
+  checklistItem('admission', '打包宽松开襟上衣、宽松下装和棉袜'),
+  checklistItem('admission', '带防滑拖鞋'),
+  checklistItem('admission', '带卫生巾、抽纸、湿巾和洗脸巾'),
+  checklistItem('admission', '带保温杯和弯头吸管'),
+  checklistItem('admission', '带漱口水、润唇膏和一次性内裤', '按个人习惯准备'),
+  checklistItem('surgery', '按护士或医生通知完成禁食、禁水和术前准备', '不要按网上时间自行判断'),
+  checklistItem('surgery', '取下首饰、隐形眼镜和可卸指甲装饰', '按医院要求'),
+  checklistItem('surgery', '确认重要证件、检查资料和手机交给陪护'),
+  checklistItem('recovery', '按医嘱饮水、下床活动或休息', '具体时间和方式以病区安排为准'),
+  checklistItem('recovery', '记录让自己担心的疼痛、出血或其他不适'),
+  checklistItem('recovery', '补充卫生巾、吸管和润唇膏等随手用品'),
+  checklistItem('recovery', '收腹带', '是否需要及何时使用，先问手术医生', true),
+  checklistItem('recovery', '口香糖或陈皮', '仅作个人舒适选择，先确认是否适合当前饮食安排', true),
+  checklistItem('rest', '把工作和家务降到最低配'),
+  checklistItem('rest', '按医嘱安排复诊、用药和恢复活动'),
+  checklistItem('rest', '保留宽松衣物和容易入口的日常用品'),
+];
+
 const defaultData = (): AppData => ({
   profile: { surgeryName: '畸胎瘤腹腔镜', admissionDate: '2026-07-06', surgeryStartDate: '2026-07-09', surgeryEndDate: '2026-07-10', dischargeDate: '2026-07-13', restUntilDate: '2026-07-27' },
   daily: { date: today(), energy: 3, mood: 3, discomfort: '无', mustDoToday: false },
@@ -16,6 +41,7 @@ const defaultData = (): AppData => ({
     { id: id(), title: '按医嘱吃药 / 做检查', priority: 'must', time: '', repeat: false, done: false, note: '', doctorAssigned: true },
     { id: id(), title: '喝一点水、慢慢活动', priority: 'optional', time: '', repeat: true, done: false, note: '', doctorAssigned: false },
   ],
+  checklist: defaultChecklist(),
   records: [], doctorNotes: [], alertNotes: [{ id: id(), title: '需要担心时优先联系医院', description: '这个工具不提供医学判断；有让你担心的症状，以医生建议和就医为先。' }], diaries: [], drafts: { record: '', diary: '' },
 });
 
@@ -37,6 +63,7 @@ const load = (): AppData => {
       daily: { ...fallback.daily, ...parsed.daily },
       drafts: { ...fallback.drafts, ...parsed.drafts },
       reminders: parsed.reminders ?? fallback.reminders,
+      checklist: parsed.checklist ?? fallback.checklist,
       records: parsed.records ?? fallback.records,
       doctorNotes: parsed.doctorNotes ?? fallback.doctorNotes,
       alertNotes: parsed.alertNotes ?? fallback.alertNotes,
@@ -65,7 +92,7 @@ function planFor(data: AppData, phase: SurgeryPhase) {
 
 function App() {
   const [data, setData] = useState<AppData>(load);
-  const [tab, setTab] = useState<'today' | 'reminders' | 'records' | 'relax'>('today');
+  const [tab, setTab] = useState<'today' | 'checklist' | 'reminders' | 'records' | 'relax'>('today');
   const [reminder, setReminder] = useState('');
   useEffect(() => { localStorage.setItem(KEY, JSON.stringify(data)); }, [data]);
   useEffect(() => {
@@ -78,22 +105,27 @@ function App() {
 
   const phase = phaseFor(data);
   const plan = useMemo(() => planFor(data, phase), [data, phase]);
+  const currentChecklist = data.checklist.filter((item) => item.phase === phase);
   const updateDaily = (patch: Partial<AppData['daily']>) => setData((v) => ({ ...v, daily: { ...v.daily, ...patch } }));
   const updateDraft = (name: 'record' | 'diary', value: string) => setData((v) => ({ ...v, drafts: { ...v.drafts, [name]: value } }));
-  const toggle = (item: ReminderItem) => setData((v) => ({ ...v, reminders: v.reminders.map((r) => r.id === item.id ? { ...r, done: !r.done } : r) }));
+  const toggleReminder = (item: ReminderItem) => setData((v) => ({ ...v, reminders: v.reminders.map((r) => r.id === item.id ? { ...r, done: !r.done } : r) }));
+  const toggleChecklist = (item: ChecklistItem) => setData((v) => ({ ...v, checklist: v.checklist.map((entry) => entry.id === item.id ? { ...entry, done: !entry.done } : entry) }));
   const addReminder = () => { if (!reminder.trim()) return; setData((v) => ({ ...v, reminders: [{ id: id(), title: reminder.trim(), priority: 'optional', time: '', repeat: false, done: false, note: '', doctorAssigned: false }, ...v.reminders] })); setReminder(''); };
   const saveRecord = () => { const item: BodyRecord = { date: today(), pain: 0, sleep: '一般', appetite: '一般', energy: data.daily.energy, mood: data.daily.mood, newSymptoms: data.drafts.record.trim(), temperature: '', stool: '', notes: '' }; setData((v) => ({ ...v, records: [item, ...v.records.filter((r) => r.date !== item.date)], drafts: { ...v.drafts, record: '' } })); };
   const saveDiary = () => { if (!data.drafts.diary.trim()) return; const item: DiaryEntry = { id: id(), date: today(), prompt: '今天有什么小事让你舒服一点？', content: data.drafts.diary.trim() }; setData((v) => ({ ...v, diaries: [item, ...v.diaries], drafts: { ...v.drafts, diary: '' } })); };
 
+  const checklistPanel = (items: ChecklistItem[], title: string) => <section className="card"><h2>{title}</h2><div className="list">{items.map((item) => <label key={item.id} className={item.done ? 'done' : ''}><input type="checkbox" checked={item.done} onChange={() => toggleChecklist(item)}/><span>{item.title}{item.optional ? ' · 可选' : ''}{item.note ? <small>{item.note}</small> : null}</span></label>)}</div></section>;
+
   return <div className="app-shell">
     <header className="hero"><p>恢复中 · {today()}</p><h1>今天先这样</h1><span>{phaseLabel[phase]}</span></header>
     <main>
-      {tab === 'today' && <><section className="card"><h2>当前流程</h2><p className="muted">围绕畸胎瘤腹腔镜：术前准备、住院、术后恢复与两周休息。页面每天会按当天日期自动切换阶段。</p><div className="timeline"><span>入院<br/><b>{data.profile.admissionDate}</b></span><span>手术<br/><b>{data.profile.surgeryStartDate}</b></span><span>出院<br/><b>{data.profile.dischargeDate}</b></span><span>休息到<br/><b>{data.profile.restUntilDate}</b></span></div></section><section className="card"><h2>今天的状态</h2><label>体力 <input type="range" min="1" max="5" value={data.daily.energy} onChange={(e) => updateDaily({ energy: Number(e.target.value) as 1|2|3|4|5 })}/><b>{data.daily.energy}/5</b></label><label>心情 <input type="range" min="1" max="5" value={data.daily.mood} onChange={(e) => updateDaily({ mood: Number(e.target.value) as 1|2|3|4|5 })}/><b>{data.daily.mood}/5</b></label><div className="chips">{(['无', '有一点', '明显'] as const).map((v) => <button key={v} className={data.daily.discomfort === v ? 'active' : ''} onClick={() => updateDaily({ discomfort: v })}>{v}</button>)}</div></section><section className="card soft"><h2>今天只做三件事</h2><p>{plan.prompt}</p><ol>{plan.must.map((v) => <li key={v}>{v}</li>)}</ol></section><section className="card"><h2>今天可以取消什么</h2><p>{plan.defer}</p></section></>}
-      {tab === 'reminders' && <section className="card"><h2>提醒</h2><p className="muted">标有“每天”的提醒，会在新的一天自动恢复为未完成。</p><div className="add-row"><input value={reminder} onChange={(e) => setReminder(e.target.value)} placeholder="新增一次性提醒"/><button onClick={addReminder}>添加</button></div><div className="list">{data.reminders.map((r) => <label key={r.id} className={r.done ? 'done' : ''}><input type="checkbox" checked={r.done} onChange={() => toggle(r)}/><span>{r.title}{r.repeat ? ' · 每天' : ''}{r.doctorAssigned ? ' · 医生交代' : ''}</span></label>)}</div></section>}
+      {tab === 'today' && <><section className="card"><h2>当前流程</h2><p className="muted">围绕畸胎瘤腹腔镜：术前准备、住院、术后恢复与两周休息。页面每天会按当天日期自动切换阶段。</p><div className="timeline"><span>入院<br/><b>{data.profile.admissionDate}</b></span><span>手术<br/><b>{data.profile.surgeryStartDate}</b></span><span>出院<br/><b>{data.profile.dischargeDate}</b></span><span>休息到<br/><b>{data.profile.restUntilDate}</b></span></div></section><section className="card"><h2>今天的状态</h2><label>体力 <input type="range" min="1" max="5" value={data.daily.energy} onChange={(e) => updateDaily({ energy: Number(e.target.value) as 1|2|3|4|5 })}/><b>{data.daily.energy}/5</b></label><label>心情 <input type="range" min="1" max="5" value={data.daily.mood} onChange={(e) => updateDaily({ mood: Number(e.target.value) as 1|2|3|4|5 })}/><b>{data.daily.mood}/5</b></label><div className="chips">{(['无', '有一点', '明显'] as const).map((v) => <button key={v} className={data.daily.discomfort === v ? 'active' : ''} onClick={() => updateDaily({ discomfort: v })}>{v}</button>)}</div></section><section className="card soft"><h2>今天只做三件事</h2><p>{plan.prompt}</p><ol>{plan.must.map((v) => <li key={v}>{v}</li>)}</ol></section>{currentChecklist.length > 0 && <section className="card"><h2>{phaseLabel[phase]}清单</h2><p className="muted">{currentChecklist.filter((item) => item.done).length}/{currentChecklist.length} 已完成</p><div className="list compact">{currentChecklist.slice(0, 3).map((item) => <label key={item.id} className={item.done ? 'done' : ''}><input type="checkbox" checked={item.done} onChange={() => toggleChecklist(item)}/><span>{item.title}</span></label>)}</div><button className="text-link" onClick={() => setTab('checklist')}>查看完整清单</button></section>}<section className="card"><h2>今天可以取消什么</h2><p>{plan.defer}</p></section></>}
+      {tab === 'checklist' && <><section className="card soft"><h2>住院包 / 阶段清单</h2><p>勾选状态会保存在这台手机的浏览器中。涉及禁食、饮水、收腹带和术后活动的事项，一律以医生和护士的安排为准。</p></section>{(['preOp', 'admission', 'surgery', 'recovery', 'rest'] as SurgeryPhase[]).map((itemPhase) => checklistPanel(data.checklist.filter((item) => item.phase === itemPhase), phaseLabel[itemPhase]))}</>}
+      {tab === 'reminders' && <section className="card"><h2>提醒</h2><p className="muted">标有“每天”的提醒，会在新的一天自动恢复为未完成。</p><div className="add-row"><input value={reminder} onChange={(e) => setReminder(e.target.value)} placeholder="新增一次性提醒"/><button onClick={addReminder}>添加</button></div><div className="list">{data.reminders.map((r) => <label key={r.id} className={r.done ? 'done' : ''}><input type="checkbox" checked={r.done} onChange={() => toggleReminder(r)}/><span>{r.title}{r.repeat ? ' · 每天' : ''}{r.doctorAssigned ? ' · 医生交代' : ''}</span></label>)}</div></section>}
       {tab === 'records' && <section className="card"><h2>身体记录</h2><p className="muted">输入中的文字会自动保留在这台手机的浏览器里；保存后成为今天的一条记录。</p><textarea value={data.drafts.record} onChange={(e) => updateDraft('record', e.target.value)} placeholder="今天新的或加重的不适；也可以只写一句。"/><button onClick={saveRecord}>保存今天记录</button><div className="list">{data.records.map((r) => <article key={r.date}><b>{r.date}</b><p>{r.newSymptoms || '未记录特殊不适'}</p></article>)}</div></section>}
       {tab === 'relax' && <section className="card soft"><h2>先歇一会儿</h2><p>松开肩膀和下巴，慢慢呼气五次。恢复本来就不需要一直努力。</p><textarea value={data.drafts.diary} onChange={(e) => updateDraft('diary', e.target.value)} placeholder="今天有什么小事让你舒服一点？"/><button onClick={saveDiary}>保存一句日记</button><div className="list">{data.diaries.map((d) => <article key={d.id}><b>{d.date}</b><p>{d.content}</p></article>)}</div></section>}
     </main>
-    <nav>{([['today', '今天'], ['reminders', '提醒'], ['records', '记录'], ['relax', '放松']] as const).map(([id, label]) => <button key={id} className={tab === id ? 'nav-active' : ''} onClick={() => setTab(id)}>{label}</button>)}</nav>
+    <nav>{([['today', '今天'], ['checklist', '清单'], ['reminders', '提醒'], ['records', '记录'], ['relax', '放松']] as const).map(([id, label]) => <button key={id} className={tab === id ? 'nav-active' : ''} onClick={() => setTab(id)}>{label}</button>)}</nav>
   </div>;
 }
 
