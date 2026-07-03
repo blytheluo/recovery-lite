@@ -78,4 +78,8 @@ export type AppData = {
   doctorNotes: DoctorNote[];
   alertNotes: AlertNote[];
   diaries: DiaryEntry[];
+  drafts: {
+    record: string;
+    diary: string;
+  };
 };
