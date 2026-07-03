@@ -3,6 +3,7 @@ import AppNext from './AppNext';
 import { pauseCards } from './pauseCards';
 import './playful.css';
 import './record-layout.css';
+import './book.css';
 
 const DATA_KEY = 'recovery-lite-data-v2';
 const BOOK_KEY = 'recovery-lite-book-v1';
