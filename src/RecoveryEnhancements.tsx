@@ -10,14 +10,21 @@ const dailyCard = () => {
 
 export default function RecoveryEnhancements() {
   useEffect(() => {
-    const installCard = () => {
+    const syncCard = () => {
       const diary = document.querySelector('textarea[placeholder*="今天有什么小事"]');
       const panel = diary?.closest('.next-card');
       const host = panel?.parentElement;
-      if (!panel || !host) return;
+      const existingCards = Array.from(document.querySelectorAll('.next-daily-card'));
 
-      const existing = host.querySelector('.next-daily-card');
-      if (existing) return;
+      if (!panel || !host) {
+        existingCards.forEach((card) => card.remove());
+        return;
+      }
+
+      existingCards.forEach((card) => {
+        if (card.parentElement !== host || card.nextElementSibling !== panel) card.remove();
+      });
+      if (host.querySelector('.next-daily-card')) return;
 
       const [title, story, aside] = dailyCard();
       const card = document.createElement('section');
@@ -46,8 +53,8 @@ export default function RecoveryEnhancements() {
       host.insertBefore(card, panel);
     };
 
-    installCard();
-    const timer = window.setInterval(installCard, 400);
+    syncCard();
+    const timer = window.setInterval(syncCard, 250);
     const moveToTop = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
       if (target.closest('.next-nav button')) window.setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 0);
