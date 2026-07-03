@@ -6,6 +6,8 @@ export type SleepState = '差' | '一般' | '还可以';
 export type AppetiteState = '差' | '一般' | '可以';
 
 export type TrackingMode = 'hospital' | 'postOp' | 'recovery';
+export type SurgeryStage = 'planned' | 'past' | 'recovery';
+export type SurgeryTemplateKey = 'appendectomy_laparoscopy' | 'teratoma_laparoscopy';
 
 export type RecoveryProfile = {
   mode: TrackingMode;
@@ -68,9 +70,20 @@ export type DiaryEntry = {
   content: string;
 };
 
+export type SurgeryItem = {
+  id: string;
+  templateKey: SurgeryTemplateKey;
+  name: string;
+  stage: SurgeryStage;
+  date: string;
+  active: boolean;
+  note: string;
+};
+
 export type AppData = {
   profile: RecoveryProfile;
   daily: DailyState;
+  surgeries: SurgeryItem[];
   reminders: ReminderItem[];
   records: BodyRecord[];
   doctorNotes: DoctorNote[];
