@@ -2,8 +2,8 @@
   "name": "恢复中",
   "short_name": "恢复中",
   "description": "一个轻量、低压力的恢复期小工具。",
-  "start_url": "/",
-  "scope": "/",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#f3efe6",
   "theme_color": "#f3efe6"

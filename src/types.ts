@@ -5,19 +5,19 @@ export type TaskPriority = 'must' | 'optional';
 export type SleepState = '差' | '一般' | '还可以';
 export type AppetiteState = '差' | '一般' | '可以';
 
-export type TrackingMode = 'hospital' | 'postOp' | 'recovery';
-export type SurgeryStage = 'planned' | 'past' | 'recovery';
-export type SurgeryTemplateKey = 'appendectomy_laparoscopy' | 'teratoma_laparoscopy';
+export type SurgeryPhase = 'preOp' | 'admission' | 'surgery' | 'recovery' | 'rest';
 
 export type RecoveryProfile = {
-  mode: TrackingMode;
-  startDate: string;
-  enabled: boolean;
+  surgeryName: '畸胎瘤腹腔镜';
+  admissionDate: string;
+  surgeryStartDate: string;
+  surgeryEndDate: string;
+  dischargeDate: string;
+  restUntilDate: string;
 };
 
 export type DailyState = {
   date: string;
-  dayNumber: number;
   energy: EnergyScore;
   mood: MoodScore;
   discomfort: DiscomfortLevel;
@@ -70,30 +70,12 @@ export type DiaryEntry = {
   content: string;
 };
 
-export type SurgeryItem = {
-  id: string;
-  templateKey: SurgeryTemplateKey;
-  name: string;
-  stage: SurgeryStage;
-  date: string;
-  active: boolean;
-  note: string;
-};
-
 export type AppData = {
   profile: RecoveryProfile;
   daily: DailyState;
-  surgeries: SurgeryItem[];
   reminders: ReminderItem[];
   records: BodyRecord[];
   doctorNotes: DoctorNote[];
   alertNotes: AlertNote[];
   diaries: DiaryEntry[];
-  hospital: {
-    testPlan: string;
-    fastingReminder: string;
-    questions: { id: string; text: string; asked: boolean }[];
-    bagList: { id: string; text: string; packed: boolean }[];
-    lowEnergyIdeas: string[];
-  };
 };
