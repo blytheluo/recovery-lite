@@ -12,7 +12,22 @@ const dailyCard = () => {
 
 export default function RecoveryEnhancements() {
   useEffect(() => {
+    const simplifyRecordPanel = () => {
+      const cards = Array.from(document.querySelectorAll('.next-card'));
+      const recordCard = cards.find((card) => card.querySelector('h2')?.textContent === '身体记录');
+      if (!recordCard) return;
+      const hint = recordCard.querySelector('.next-muted');
+      if (hint) hint.textContent = '点选即自动保存在这台手机里，不需要再按保存。';
+      const textarea = recordCard.querySelector('textarea');
+      if (textarea) (textarea as HTMLElement).style.display = 'none';
+      const saveButton = Array.from(recordCard.querySelectorAll('button')).find((button) => button.textContent === '保存今天记录');
+      if (saveButton) (saveButton as HTMLElement).style.display = 'none';
+      const history = recordCard.querySelector('.next-list');
+      if (history) (history as HTMLElement).style.display = 'none';
+    };
+
     const syncCard = () => {
+      simplifyRecordPanel();
       const diary = document.querySelector('textarea[placeholder*="今天有什么小事"]');
       const panel = diary?.closest('.next-card');
       const host = panel?.parentElement;
