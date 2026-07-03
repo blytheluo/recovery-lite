@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import AppNext from './AppNext';
 import { pauseCards } from './pauseCards';
 import './playful.css';
+import './record-layout.css';
 
 const dailyCard = () => {
   const key = new Date().toISOString().slice(0, 10);
