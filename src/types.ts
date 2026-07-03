@@ -35,6 +35,15 @@ export type ReminderItem = {
   doctorAssigned: boolean;
 };
 
+export type ChecklistItem = {
+  id: string;
+  phase: SurgeryPhase;
+  title: string;
+  note?: string;
+  optional?: boolean;
+  done: boolean;
+};
+
 export type BodyRecord = {
   date: string;
   pain: number;
@@ -74,6 +83,7 @@ export type AppData = {
   profile: RecoveryProfile;
   daily: DailyState;
   reminders: ReminderItem[];
+  checklist: ChecklistItem[];
   records: BodyRecord[];
   doctorNotes: DoctorNote[];
   alertNotes: AlertNote[];
