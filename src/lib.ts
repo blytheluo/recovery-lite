@@ -1,6 +1,9 @@
 export const STORAGE_KEY = 'recovery-middle-state-v1';
 
-export const todayISO = () => new Date().toISOString().slice(0, 10);
+export const todayISO = () => {
+  const local = new Date(Date.now() - new Date().getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 10);
+};
 
 export const cn = (...parts: Array<string | false | null | undefined>) => parts.filter(Boolean).join(' ');
 
